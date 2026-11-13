@@ -4,85 +4,285 @@
   <meta charset="utf-8">
   <title>Crop Recommendation System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Bootstrap -->
+ 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+ 
+  <style>
+    :root {
+      --ink: #1b2420;
+      --muted: #5f6b65;
+      --line: #d3dad6;
+      --surface: #ffffff;
+      --canvas: #eef1ef;
+      --brand: #2c5b44;
+      --brand-dark: #214534;
+      --focus: rgba(44, 91, 68, .22);
+    }
+ 
+    body {
+      font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--canvas);
+      min-height: 100vh;
+      isolation: isolate;
+      line-height: 1.55;
+    }
+ 
+    /* Keeps your background image, softened so the form stays legible */
+    .page-background {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: rgba(238, 241, 239, .93);
+    }
+ 
+    /* Header */
+    .site-header {
+      background: var(--brand-dark);
+      color: #fff;
+    }
+    .site-header .container {
+      max-width: 1040px;
+      padding-top: .9rem;
+      padding-bottom: .9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .site-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: .01em;
+      color: #fff;
+      text-decoration: none;
+    }
+    .site-sub { font-size: .875rem; color: #b9cbc1; }
+ 
+    /* Layout */
+    .app { max-width: 1040px; padding: 2.5rem 1rem 3rem; }
+    .intro h1 { font-size: 1.75rem; font-weight: 600; margin-bottom: .35rem; }
+    .intro p { color: var(--muted); max-width: 60ch; margin-bottom: 0; }
+ 
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+    .panel-head {
+      padding: .9rem 1.25rem;
+      border-bottom: 1px solid var(--line);
+      font-weight: 600;
+    }
+    .panel-body { padding: 1.25rem; }
+ 
+    fieldset { border: 0; padding: 0; margin: 0 0 1.5rem; }
+    legend {
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 0;
+      margin-bottom: .15rem;
+      float: none;
+      width: auto;
+    }
+    .legend-note { font-size: .875rem; color: var(--muted); margin-bottom: .9rem; }
+ 
+    .form-label { font-size: .875rem; font-weight: 500; margin-bottom: .3rem; }
+    .form-control, .input-group-text {
+      border-color: #bcc6c1;
+      border-radius: 4px;
+    }
+    .form-control { padding: .55rem .75rem; }
+    .form-control::placeholder { color: #9aa5a0; }
+    .form-control:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 .2rem var(--focus);
+    }
+    .input-group-text {
+      background: #f4f6f5;
+      color: var(--muted);
+      font-size: .85rem;
+      min-width: 3.4rem;
+      justify-content: center;
+    }
+ 
+    .btn-primary-action {
+      background: var(--brand);
+      border: 1px solid var(--brand);
+      color: #fff;
+      font-weight: 500;
+      padding: .65rem 1.5rem;
+      border-radius: 4px;
+    }
+    .btn-primary-action:hover { background: var(--brand-dark); border-color: var(--brand-dark); color: #fff; }
+    .btn-primary-action:focus-visible { box-shadow: 0 0 0 .22rem var(--focus); outline: 0; }
+    .btn-reset {
+      background: transparent;
+      border: 1px solid #bcc6c1;
+      color: var(--ink);
+      padding: .65rem 1.25rem;
+      border-radius: 4px;
+    }
+    .btn-reset:hover { background: #f4f6f5; }
+ 
+    /* Result */
+    .result-empty { color: var(--muted); font-size: .925rem; margin: 0; }
+    .result-label { font-size: .875rem; color: var(--muted); margin-bottom: .25rem; }
+    .result-crop {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--brand-dark);
+      line-height: 1.2;
+      margin: 0 0 .75rem;
+    }
+    .result-note { font-size: .85rem; color: var(--muted); margin: 0; }
+    .result-panel { border-left: 4px solid var(--brand); }
+ 
+    footer { color: var(--muted); font-size: .825rem; }
+ 
+    @media (max-width: 575.98px) {
+      .intro h1 { font-size: 1.5rem; }
+      .site-sub { display: none; }
+    }
+  </style>
 </head>
-
-<body style="background-image: url('{{ url_for('static', filename='images/image.png') }}'); background-size: cover;">
-
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">🌱 Crop Recommendation System</a>
-    <a class="btn btn-outline-light" href="/login">Login</a>
+ 
+<body>
+<img class="page-background" src="{{ url_for('static', filename='images/image.png') }}" alt="">
+ 
+<header class="site-header">
+  <div class="container">
+    <a class="site-title" href="/">Crop Recommendation System</a>
+    <span class="site-sub">Machine learning based crop advisory</span>
   </div>
-</nav>
-
-<div class="container mt-4 p-4 bg-white rounded shadow">
-
-  <h2 class="text-center text-success mb-4">Crop Recommendation Using ML</h2>
-
-  <form action="/predict" method="POST">
-
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <label>Nitrogen</label>
-        <input type="number" name="Nitrogen" class="form-control" required>
-      </div>
-
-      <div class="col-md-4 mb-3">
-        <label>Phosphorus</label>
-        <input type="number" name="Phosporus" class="form-control" required>
-      </div>
-
-      <div class="col-md-4 mb-3">
-        <label>Potassium</label>
-        <input type="number" name="Potassium" class="form-control" required>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <label>Temperature (°C)</label>
-        <input type="number" step="0.01" name="Temperature" class="form-control" required>
-      </div>
-
-      <div class="col-md-4 mb-3">
-        <label>Humidity (%)</label>
-        <input type="number" step="0.01" name="Humidity" class="form-control" required>
-      </div>
-
-      <div class="col-md-4 mb-3">
-        <label>pH Value</label>
-        <input type="number" step="0.01" name="pH" class="form-control" required>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <label>Rainfall (mm)</label>
-        <input type="number" step="0.01" name="Rainfall" class="form-control" required>
-      </div>
-    </div>
-
-    <div class="text-center mt-3">
-      <button type="submit" class="btn btn-success btn-lg">
-        Get Recommendation
-      </button>
-    </div>
-
-  </form>
-
-  {% if result %}
-  <div class="alert alert-info text-center mt-4">
-    <h4>Recommended Crop 🌾</h4>
-    <strong>{{ result }}</strong>
+</header>
+ 
+<main class="container app">
+ 
+  <div class="intro mb-4">
+    <h1>Find the right crop for your field</h1>
+    <p>Enter your soil test values and local weather conditions. The model compares them with its training data and suggests the best-suited crop.</p>
   </div>
-  {% endif %}
-
-</div>
-
+ 
+  <div class="row g-4">
+ 
+    <!-- Form -->
+    <div class="col-lg-8">
+      <div class="panel">
+        <div class="panel-head">Field conditions</div>
+        <div class="panel-body">
+ 
+          <form action="/predict" method="POST">
+ 
+            <fieldset>
+              <legend>Soil nutrients</legend>
+              <p class="legend-note">Values from your latest soil test.</p>
+              <div class="row g-3">
+                <div class="col-sm-4">
+                  <label class="form-label" for="Nitrogen">Nitrogen (N)</label>
+                  <div class="input-group">
+                    <input type="number" id="Nitrogen" name="Nitrogen" class="form-control" placeholder="e.g. 90" required>
+                    <span class="input-group-text">kg/ha</span>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label" for="Phosphorus">Phosphorus (P)</label>
+                  <div class="input-group">
+                    <input type="number" id="Phosphorus" name="Phosphorus" class="form-control" placeholder="e.g. 42" required>
+                    <span class="input-group-text">kg/ha</span>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label" for="Potassium">Potassium (K)</label>
+                  <div class="input-group">
+                    <input type="number" id="Potassium" name="Potassium" class="form-control" placeholder="e.g. 43" required>
+                    <span class="input-group-text">kg/ha</span>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label" for="pH">Soil pH</label>
+                  <div class="input-group">
+                    <input type="number" step="0.01" id="pH" name="pH" class="form-control" placeholder="e.g. 6.5" required>
+                    <span class="input-group-text">pH</span>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+ 
+            <fieldset>
+              <legend>Climate</legend>
+              <p class="legend-note">Average conditions during the growing season.</p>
+              <div class="row g-3">
+                <div class="col-sm-4">
+                  <label class="form-label" for="Temperature">Temperature</label>
+                  <div class="input-group">
+                    <input type="number" step="0.01" id="Temperature" name="Temperature" class="form-control" placeholder="e.g. 25" required>
+                    <span class="input-group-text">°C</span>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label" for="Humidity">Humidity</label>
+                  <div class="input-group">
+                    <input type="number" step="0.01" id="Humidity" name="Humidity" class="form-control" placeholder="e.g. 80" required>
+                    <span class="input-group-text">%</span>
+                  </div>
+                </div>
+                <div class="col-sm-4">
+                  <label class="form-label" for="Rainfall">Rainfall</label>
+                  <div class="input-group">
+                    <input type="number" step="0.01" id="Rainfall" name="Rainfall" class="form-control" placeholder="e.g. 200" required>
+                    <span class="input-group-text">mm</span>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+ 
+            <div class="d-flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-primary-action">Get recommendation</button>
+              <button type="reset" class="btn btn-reset">Clear values</button>
+            </div>
+ 
+          </form>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- Result -->
+    <div class="col-lg-4">
+      <div class="panel {% if result %}result-panel{% endif %}" aria-live="polite">
+        <div class="panel-head">Recommendation</div>
+        <div class="panel-body">
+          {% if result %}
+            <p class="result-label">Best-suited crop</p>
+            <p class="result-crop">{{ result|capitalize }}</p>
+            <p class="result-note">Based on the values you entered. Confirm with your local agricultural officer before planting.</p>
+          {% else %}
+            <p class="result-empty">Fill in the field conditions and select Get recommendation. The suggested crop will appear here.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+ 
+  </div>
+ 
+  <footer class="mt-5">
+    Recommendations are model predictions and should be used as guidance, not as a substitute for local expertise.
+  </footer>
+ 
+</main>
+ 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
