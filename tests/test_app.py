@@ -20,16 +20,38 @@ class CropRecommendationAppTests(unittest.TestCase):
                 "Nitrogen": "90",
                 "Phosphorus": "42",
                 "Potassium": "43",
-                "Temperature": "25",
-                "Humidity": "80",
-                "pH": "6.5",
-                "Rainfall": "200",
+                "Temperature": "20.87974371",
+                "Humidity": "82.00274423",
+                "pH": "6.502985292",
+                "Rainfall": "202.9355362",
             },
             follow_redirects=True,
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"muskmelon", response.data.lower())
+        self.assertIn(b"rice", response.data.lower())
+        self.assertIn(b"fertility", response.data.lower())
+        self.assertIn(b"fertilizer guidance", response.data.lower())
+        self.assertIn(b'href="/" class="btn btn-reset">Clear values</a>', response.data)
+
+    def test_out_of_training_range_values_are_rejected(self):
+        response = self.client.post(
+            "/predict",
+            data={
+                "Nitrogen": "0",
+                "Phosphorus": "0",
+                "Potassium": "0",
+                "Temperature": "0",
+                "Humidity": "0",
+                "pH": "0",
+                "Rainfall": "0",
+            },
+            follow_redirects=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"phosphorus must be between", response.data.lower())
+        self.assertNotIn(b'class="result-crop"', response.data.lower())
 
     def test_invalid_inputs_return_a_clear_error(self):
         response = self.client.post(

@@ -149,6 +149,24 @@
     }
     .result-note { font-size: .85rem; color: var(--muted); margin: 0; }
     .result-panel { border-left: 4px solid var(--brand); }
+    .fertility-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+    .fertility-item {
+      padding: .55rem;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      text-align: center;
+      background: #f8faf9;
+    }
+    .fertility-item span { display: block; font-size: .75rem; color: var(--muted); }
+    .fertility-item strong { font-size: .9rem; }
+    .recommendation-list { padding-left: 1.1rem; margin: .75rem 0 0; font-size: .85rem; }
+    .recommendation-list li { margin-bottom: .45rem; }
+    .crop-focus {
+      border-top: 1px solid var(--line);
+      margin-top: .9rem;
+      padding-top: .9rem;
+      font-size: .85rem;
+    }
  
     footer { color: var(--muted); font-size: .825rem; }
  
@@ -193,28 +211,28 @@
                 <div class="col-sm-4">
                   <label class="form-label" for="Nitrogen">Nitrogen (N)</label>
                   <div class="input-group">
-                    <input type="number" id="Nitrogen" name="Nitrogen" class="form-control" placeholder="e.g. 90" required>
+                    <input type="number" id="Nitrogen" name="Nitrogen" class="form-control" placeholder="e.g. 90" value="{{ values.Nitrogen }}" min="0" required>
                     <span class="input-group-text">kg/ha</span>
                   </div>
                 </div>
                 <div class="col-sm-4">
                   <label class="form-label" for="Phosphorus">Phosphorus (P)</label>
                   <div class="input-group">
-                    <input type="number" id="Phosphorus" name="Phosphorus" class="form-control" placeholder="e.g. 42" required>
+                    <input type="number" id="Phosphorus" name="Phosphorus" class="form-control" placeholder="e.g. 42" value="{{ values.Phosphorus }}" min="0" required>
                     <span class="input-group-text">kg/ha</span>
                   </div>
                 </div>
                 <div class="col-sm-4">
                   <label class="form-label" for="Potassium">Potassium (K)</label>
                   <div class="input-group">
-                    <input type="number" id="Potassium" name="Potassium" class="form-control" placeholder="e.g. 43" required>
+                    <input type="number" id="Potassium" name="Potassium" class="form-control" placeholder="e.g. 43" value="{{ values.Potassium }}" min="0" required>
                     <span class="input-group-text">kg/ha</span>
                   </div>
                 </div>
                 <div class="col-sm-4">
                   <label class="form-label" for="pH">Soil pH</label>
                   <div class="input-group">
-                    <input type="number" step="0.01" id="pH" name="pH" class="form-control" placeholder="e.g. 6.5" required>
+                    <input type="number" step="0.01" id="pH" name="pH" class="form-control" placeholder="e.g. 6.5" value="{{ values.pH }}" min="0" max="14" required>
                     <span class="input-group-text">pH</span>
                   </div>
                 </div>
@@ -228,21 +246,21 @@
                 <div class="col-sm-4">
                   <label class="form-label" for="Temperature">Temperature</label>
                   <div class="input-group">
-                    <input type="number" step="0.01" id="Temperature" name="Temperature" class="form-control" placeholder="e.g. 25" required>
+                    <input type="number" step="0.01" id="Temperature" name="Temperature" class="form-control" placeholder="e.g. 25" value="{{ values.Temperature }}" min="0" required>
                     <span class="input-group-text">°C</span>
                   </div>
                 </div>
                 <div class="col-sm-4">
                   <label class="form-label" for="Humidity">Humidity</label>
                   <div class="input-group">
-                    <input type="number" step="0.01" id="Humidity" name="Humidity" class="form-control" placeholder="e.g. 80" required>
+                    <input type="number" step="0.01" id="Humidity" name="Humidity" class="form-control" placeholder="e.g. 80" value="{{ values.Humidity }}" min="0" max="100" required>
                     <span class="input-group-text">%</span>
                   </div>
                 </div>
                 <div class="col-sm-4">
                   <label class="form-label" for="Rainfall">Rainfall</label>
                   <div class="input-group">
-                    <input type="number" step="0.01" id="Rainfall" name="Rainfall" class="form-control" placeholder="e.g. 200" required>
+                    <input type="number" step="0.01" id="Rainfall" name="Rainfall" class="form-control" placeholder="e.g. 200" value="{{ values.Rainfall }}" min="0" required>
                     <span class="input-group-text">mm</span>
                   </div>
                 </div>
@@ -251,7 +269,7 @@
  
             <div class="d-flex flex-wrap gap-2">
               <button type="submit" class="btn btn-primary-action">Get recommendation</button>
-              <button type="reset" class="btn btn-reset">Clear values</button>
+              <a href="{{ url_for('index') }}" class="btn btn-reset">Clear values</a>
             </div>
  
           </form>
@@ -264,9 +282,29 @@
       <div class="panel {% if result %}result-panel{% endif %}" aria-live="polite">
         <div class="panel-head">Recommendation</div>
         <div class="panel-body">
-          {% if result %}
+          {% if result and result.startswith("❌") %}
+            <p class="result-empty text-danger">{{ result }}</p>
+          {% elif result %}
             <p class="result-label">Best-suited crop</p>
             <p class="result-crop">{{ result|capitalize }}</p>
+            {% if fertility %}
+              <p class="result-label mt-3">{{ fertility|capitalize }}</p>
+              <div class="fertility-grid">
+                {% set nutrient_statuses = fertilizer.split(" | ") %}
+                {% for status in nutrient_statuses %}
+                  <div class="fertility-item"><span>{{ status.split(":")[0] }}</span><strong>{{ status.split(":")[1] }}</strong></div>
+                {% endfor %}
+              </div>
+              <p class="result-label mt-3">Fertilizer guidance</p>
+              <ul class="recommendation-list">
+                {% for step in soil_steps %}
+                  <li>{{ step }}</li>
+                {% endfor %}
+              </ul>
+              <div class="crop-focus">
+                <strong>{{ result }} focus:</strong> {{ crop_focus }}
+              </div>
+            {% endif %}
             <p class="result-note">Based on the values you entered. Confirm with your local agricultural officer before planting.</p>
           {% else %}
             <p class="result-empty">Fill in the field conditions and select Get recommendation. The suggested crop will appear here.</p>

@@ -18,6 +18,9 @@ The application is built with:
 
 - Input soil nutrient values and weather conditions
 - Predict suitable crop from trained ML model
+- Assess current nitrogen, phosphorus, and potassium soil fertility
+- Suggest fertilizer sources and crop-specific nutrient focus
+- Reject field values outside the training dataset's range instead of extrapolating a crop prediction
 - Simple web interface for easy field data entry
 - Works with common crop categories such as rice, maize, cotton, mango, banana, grapes, and more
 - Useful for prototype agricultural decision-support systems
